@@ -217,3 +217,4 @@ class TwitterAdapter(IOAdapter):
             else:
                 sleep(3600-time() % 3600)
                 t.statuses.update(status=message)
+

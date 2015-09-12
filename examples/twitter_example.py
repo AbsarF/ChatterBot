@@ -1,32 +1,31 @@
+from chatterbot import ChatBot
+
+
+chatbot = ChatBot("ChatterBot",
+    storage_adapter="chatterbot.adapters.storage.JsonDatabaseAdapter",
+    logic_adapter="chatterbot.adapters.logic.ClosestMatchAdapter",
+    io_adapter="chatterbot.adapters.io.TwitterAdapter",
+    database="../database.db",
+    consumer_key="xxx",
+    consumer_secret="xxx"
+)
+
 '''
 Respond to mentions on twitter.
 The bot will follow the user who mentioned it and
 favorite the post in which the mention was made.
 '''
 
-chatbot = ChatBot("ChatterBot",
-    storage_adapter="chatterbot.adapters.storage.JsonDatabaseAdapter",
-    logic_adapter="chatterbot.adapters.logic.ClosestMatchAdapter",
-    io_adapter="chatterbot.adapters.io.TwitterAdapter",
-    database="../database.db")
+user_input = "Type something to begin..."
 
-for mention in chatbot.get_mentions():
+print(user_input)
 
-    '''
-    Check to see if the post has been favorited
-    We will use this as a check for whether or not to respond to it.
-    Only respond to unfavorited mentions.
-    '''
+while True:
+    try:
+        user_input = chatbot.get_input()
 
-    if not mention["favorited"]:
-        screen_name = mention["user"]["screen_name"]
-        text = mention["text"]
-        response = chatbot.get_response(text)
+        bot_input = chatbot.get_response(user_input)
 
-        print(text)
-        print(response)
-
-        chatbot.follow(screen_name)
-        chatbot.favorite(mention["id"])
-        chatbot.reply(mention["id"], response)
+    except (KeyboardInterrupt, EOFError, SystemExit):
+        break
 
