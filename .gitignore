@@ -1,5 +1,6 @@
 build
 dist
+settings.py
 *.pyc
 *.swp
 *.egg-info
