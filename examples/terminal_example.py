@@ -1,39 +1,33 @@
 from chatterbot import ChatBot
 
 
+# Uncomment the following lines to enable verbose logging
+# import logging
+# logging.basicConfig(level=logging.INFO)
+
 # Create a new instance of a ChatBot
-bot = ChatBot("Terminal",
-    storage_adapter="chatterbot.adapters.storage.JsonDatabaseAdapter",
-    logic_adapter="chatterbot.adapters.logic.ClosestMatchAdapter",
-    io_adapter="chatterbot.adapters.io.TerminalAdapter",
-    database="/home/gcox/GitHub/ChatterBot/database.db")
+bot = ChatBot(
+    'Terminal',
+    storage_adapter='chatterbot.storage.SQLStorageAdapter',
+    logic_adapters=[
+        'chatterbot.logic.MathematicalEvaluation',
+        'chatterbot.logic.TimeLogicAdapter',
+        'chatterbot.logic.BestMatch'
+    ],
+    database_uri='sqlite:///database.sqlite3'
+)
 
-user_input = "Type something to begin..."
+print('Type something to begin...')
 
-print(user_input)
-
-'''
-In this example we use a while loop combined with a try-except statement.
-This allows us to have a conversation with the chat bot until we press
-ctrl-c or ctrl-d on the keyboard.
-'''
-
+# The following loop will execute each time the user enters input
 while True:
     try:
-        '''
-        ChatterBot's get_input method uses io adapter to get new input for
-        the bot to respond to. In this example, the TerminalAdapter gets the
-        input from the user's terminal. Other io adapters might retrieve input
-        differently, such as from various web APIs.
-        '''
-        user_input = bot.get_input()
+        user_input = input()
 
-        '''
-        The get_response method also uses the io adapter to determine how
-        the bot's output should be returned. In the case of the TerminalAdapter,
-        the output is printed to the user's terminal.
-        '''
-        bot_input = bot.get_response(user_input)
+        bot_response = bot.get_response(user_input)
 
+        print(bot_response)
+
+    # Press ctrl-c or ctrl-d on the keyboard to exit
     except (KeyboardInterrupt, EOFError, SystemExit):
         break

@@ -1,37 +1,11 @@
-from unittest import TestCase
+from unittest import TestCase, SkipTest
 from chatterbot import ChatBot
 
 
 class ChatBotTestCase(TestCase):
 
     def setUp(self):
-        """
-        Set up a database for testing.
-        """
-        data1 = [
-            "african or european?",
-            "Huh? I... I don't know that.",
-            "How do you know so much about swallows?"
-        ]
-
-        data2 = [
-            "Siri is adorable",
-            "Who is Seri?",
-            "Siri is my cat"
-        ]
-
-        data3 = [
-            "What... is your quest?",
-            "To seek the Holy Grail.",
-            "What... is your favourite colour?",
-            "Blue."
-        ]
-
-        self.chatbot = ChatBot("Test Bot", database="test-database.db")
-
-        self.chatbot.train(data1)
-        self.chatbot.train(data2)
-        self.chatbot.train(data3)
+        self.chatbot = ChatBot('Test Bot', **self.get_kwargs())
 
     def tearDown(self):
         """
@@ -39,31 +13,51 @@ class ChatBotTestCase(TestCase):
         """
         self.chatbot.storage.drop()
 
+    def assertIsLength(self, item, length):
+        """
+        Assert that an iterable has the given length.
+        """
+        if len(item) != length:
+            raise AssertionError(
+                'Length {} is not equal to {}'.format(len(item), length)
+            )
 
-class UntrainedChatBotTestCase(TestCase):
-    """
-    This is a test case for use when the
-    chat bot should not start with any
-    prior training.
-    """
+    def get_kwargs(self):
+        return {
+            # Run the test database in-memory
+            'database_uri': None,
+            # Don't execute initialization processes such as downloading required data
+            'initialize': False
+        }
 
-    def setUp(self):
-        """
-        Set up a database for testing.
-        """
-        test_db = self.random_string() + ".db"
-        self.chatbot = ChatBot("Test Bot", database=test_db)
 
-    def random_string(self, start=0, end=9000):
-        """
-        Generate a string based on a random number.
-        """
-        from random import randint
-        return str(randint(start, end))
+class ChatBotMongoTestCase(ChatBotTestCase):
 
-    def tearDown(self):
-        """
-        Remove the test database.
-        """
-        self.chatbot.storage.drop()
+    @classmethod
+    def setUpClass(cls):
+        from pymongo.errors import ServerSelectionTimeoutError
+        from pymongo import MongoClient
 
+        # Skip these tests if a mongo client is not running
+        try:
+            client = MongoClient(
+                serverSelectionTimeoutMS=0.1
+            )
+            client.server_info()
+
+        except ServerSelectionTimeoutError:
+            raise SkipTest('Unable to connect to Mongo DB.')
+
+    def get_kwargs(self):
+        kwargs = super().get_kwargs()
+        kwargs['database_uri'] = 'mongodb://localhost:27017/chatterbot_test_database'
+        kwargs['storage_adapter'] = 'chatterbot.storage.MongoDatabaseAdapter'
+        return kwargs
+
+
+class ChatBotSQLTestCase(ChatBotTestCase):
+
+    def get_kwargs(self):
+        kwargs = super().get_kwargs()
+        kwargs['storage_adapter'] = 'chatterbot.storage.SQLStorageAdapter'
+        return kwargs
